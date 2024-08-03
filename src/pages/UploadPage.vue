@@ -1,5 +1,6 @@
 <template>
-    <label for="file" class="custum-file-upload">
+  <div>
+    <label v-if="!fileUrl" for="file" class="custum-file-upload">
       <div class="icon">
         <svg viewBox="0 0 24 24" fill="" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -14,79 +15,121 @@
       </div>
       <input id="file" type="file" accept=".mp3, .mp4" @change="handleUpload">
     </label>
-  </template>
+    <div v-else>
+      <a :href="fileUrl" :download="fileName" class="download-link">Download File</a>
+    </div>
+  </div>
+</template>
 
 <script>
+import axios from 'axios';
 
 export default {
   name: 'UploadPage',
-  data(){
+  data() {
     return {
       selectedFile: null,
+      fileUrl: '',
+      fileName: '',
     };
   },
-  methods:{
-    handleUpload(event){
-      const file = event.target.files[0];
-      this.selectedFile=file;
-      console.log(file);
+  methods: {
+    async handleUpload(event) {
+    const file = event.target.files[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
     }
-  }
-  
+    this.selectedFile = file;
+    this.fileName = file.name;
+
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:8080/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        responseType: 'blob', // Important to handle the binary data
+      });
+
+      // Convert byte response to Blob
+      const blob = new Blob([response.data], { type: response.data.type });
+      this.fileUrl = URL.createObjectURL(blob); // Create a URL for the Blob
+
+      console.log('File uploaded successfully:', this.fileUrl);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+
+    event.target.value = null;  // Reset the input value
+  },
+  },
+};
+</script>
+
+<style scoped>
+body {
+  background-color: #e8e8e8;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-</script>
-  
-  <style scoped>
-  body {
-    background-color: #e8e8e8;
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .custum-file-upload {
-    height: 200px;
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed #cacaca;
-    background-color: rgba(255, 255, 255, 1);
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0px 48px 35px -48px rgba(0,0,0,0.1);
-  }
-  
-  .custum-file-upload .icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .custum-file-upload .icon svg {
-    height: 80px;
-    fill: rgba(75, 85, 99, 1);
-  }
-  
-  .custum-file-upload .text {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .custum-file-upload .text span {
-    font-weight: 400;
-    color: rgba(75, 85, 99, 1);
-  }
-  
-  .custum-file-upload input {
-    display: none;
-  }
-  </style>
-  
+.custum-file-upload {
+  height: 200px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cacaca;
+  background-color: rgba(255, 255, 255, 1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0px 48px 35px -48px rgba(0, 0, 0, 0.1);
+}
+
+.custum-file-upload .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custum-file-upload .icon svg {
+  height: 80px;
+  fill: rgba(75, 85, 99, 1);
+}
+
+.custum-file-upload .text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custum-file-upload .text span {
+  font-weight: 400;
+  color: rgba(75, 85, 99, 1);
+}
+
+.custum-file-upload input {
+  display: none;
+}
+
+.download-link {
+  display: block;
+  margin-top: 20px;
+  text-align: center;
+  color: #000;
+  text-decoration: none;
+  font-weight: 600;
+}
+</style>
+
+
+<!-- To handle this data properly, you need to specify responseType: 'blob' in your Axios request. This tells Axios to treat the response as binary data (a Blob). -->
