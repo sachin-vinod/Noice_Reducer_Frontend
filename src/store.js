@@ -8,11 +8,11 @@ const store = createStore({
   mutations: {
     SET_PROCESSED_FILE_URL(state, data) {
       const blob = new Blob([data], { type:data.type });
-      this.state.processedFileUrl = URL.createObjectURL(blob)
+      state.processedFileUrl = URL.createObjectURL(blob)
     },
   },
   actions: {
-    async getProcessedFile(selectedFile){
+    async getProcessedFile({commit},selectedFile){
       const formData = new FormData();
       formData.append('file', selectedFile);
   
@@ -24,9 +24,7 @@ const store = createStore({
           responseType: 'blob', // Important to handle the binary data
         });
   
-        // Convert byte response to Blob
-        const blob = new Blob([response.data], { type: response.data.type });
-        this.state.processedFileUrl = URL.createObjectURL(blob); // Create a URL for the Blob
+       commit('SET_PROCESSED_FILE_URL',response.data);
   
         console.log('File uploaded successfully:', this.fileUrl);
       } catch (error) {

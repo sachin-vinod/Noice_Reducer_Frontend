@@ -1,6 +1,6 @@
 <template>
   <div>
-    <label v-if="!fileUrl" for="file" class="custum-file-upload">
+    <label v-if="!processedFileUrl" for="file" class="custum-file-upload">
       <div class="icon">
         <svg viewBox="0 0 24 24" fill="" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -16,55 +16,40 @@
       <input id="file" type="file" accept=".mp3, .mp4" @change="handleUpload">
     </label>
     <div v-else>
-      <a :href="fileUrl" :download="fileName" class="download-link">Download File</a>
+      <a :href="processedFileUrl" :download="fileName" class="download-link">Download File</a>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import { mapState, mapActions } from 'vuex';
 
 export default {
   name: 'UploadPage',
   data() {
     return {
       selectedFile: null,
-      fileUrl: '',
       fileName: '',
     };
   },
-  methods: {
-    async handleUpload(event) {
-    const file = event.target.files[0];
-    if (!file) {
-      console.error('No file selected');
-      return;
-    }
-    this.selectedFile = file;
-    this.fileName = file.name;
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    try {
-      const response = await axios.post('http://localhost:8080/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        responseType: 'blob', // Important to handle the binary data
-      });
-
-      // Convert byte response to Blob
-      const blob = new Blob([response.data], { type: response.data.type });
-      this.fileUrl = URL.createObjectURL(blob); // Create a URL for the Blob
-
-      console.log('File uploaded successfully:', this.fileUrl);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
-
-    event.target.value = null;  // Reset the input value
+  computed: {
+    ...mapState(['processedFileUrl']),
   },
+  methods: {
+    ...mapActions(['getProcessedFile']),
+    async handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        console.error('No file selected');
+        return;
+      }
+      this.selectedFile = file;
+      this.fileName = file.name;
+
+      await this.getProcessedFile(this.selectedFile);
+
+      event.target.value = null;  // Reset the input value
+    },
   },
 };
 </script>
@@ -130,6 +115,3 @@ body {
   font-weight: 600;
 }
 </style>
-
-
-<!-- To handle this data properly, you need to specify responseType: 'blob' in your Axios request. This tells Axios to treat the response as binary data (a Blob). -->
