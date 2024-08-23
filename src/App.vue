@@ -1,17 +1,12 @@
 <template>
   <div id="app">
-    <upload-page />
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import uploadPage from './pages/UploadPage.vue';
-
 export default {
   name: 'App',
-  components: {
-    uploadPage,
-  }
 }
 </script>
 

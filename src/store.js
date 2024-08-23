@@ -4,11 +4,12 @@ import axios from "axios";
 const store = createStore({
   state: {
     processedFileUrl: null,
+    fileName: ''
   },
   mutations: {
-    SET_PROCESSED_FILE_URL(state, data) {
-      const blob = new Blob([data], { type:data.type });
-      state.processedFileUrl = URL.createObjectURL(blob)
+    SET_PROCESSED_FILE_URL(state, { url, name }) {
+      state.processedFileUrl = url;
+      state.fileName = name;
     },
   },
   actions: {
@@ -23,8 +24,9 @@ const store = createStore({
           },
           responseType: 'blob', // Important to handle the binary data
         });
-  
-       commit('SET_PROCESSED_FILE_URL',response.data);
+        const blob = new Blob([response.data], { type:response.data.type });
+        const url = URL.createObjectURL(blob);
+       commit('SET_PROCESSED_FILE_URL',{url, name: selectedFile.name});
   
         console.log('File uploaded successfully:', this.fileUrl);
       } catch (error) {

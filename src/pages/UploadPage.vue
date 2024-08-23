@@ -1,6 +1,6 @@
 <template>
   <div>
-    <label v-if="!processedFileUrl" for="file" class="custum-file-upload">
+    <label v-if="!isUploadDone" for="file" class="custum-file-upload">
       <div class="icon">
         <svg viewBox="0 0 24 24" fill="" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -16,13 +16,13 @@
       <input id="file" type="file" accept=".mp3, .mp4" @change="handleUpload">
     </label>
     <div v-else>
-      <a :href="processedFileUrl" :download="fileName" class="download-link">Download File</a>
+      <div class="loader"></div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapActions } from 'vuex';
 
 export default {
   name: 'UploadPage',
@@ -30,10 +30,8 @@ export default {
     return {
       selectedFile: null,
       fileName: '',
+      isUploadDone: false,
     };
-  },
-  computed: {
-    ...mapState(['processedFileUrl']),
   },
   methods: {
     ...mapActions(['getProcessedFile']),
@@ -46,8 +44,13 @@ export default {
       this.selectedFile = file;
       this.fileName = file.name;
 
-      await this.getProcessedFile(this.selectedFile);
+      if(this.selectedFile!=null){
+        this.isUploadDone=true;
+      }
 
+      await this.getProcessedFile(this.selectedFile);
+      this.isUploadDone=false;
+      this.$router.push('/download');
       event.target.value = null;  // Reset the input value
     },
   },
@@ -113,5 +116,72 @@ body {
   color: #000;
   text-decoration: none;
   font-weight: 600;
+}
+
+/* From Uiverse.io by alexruix */ 
+.loader {
+  width: 48px;
+  height: 48px;
+  margin: auto;
+  position: relative;
+}
+
+.loader:before {
+  content: '';
+  width: 48px;
+  height: 5px;
+  background: #f0808050;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  border-radius: 50%;
+  animation: shadow324 0.5s linear infinite;
+}
+
+.loader:after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  background: #f08080;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 4px;
+  animation: jump7456 0.5s linear infinite;
+}
+
+@keyframes jump7456 {
+  15% {
+    border-bottom-right-radius: 3px;
+  }
+
+  25% {
+    transform: translateY(9px) rotate(22.5deg);
+  }
+
+  50% {
+    transform: translateY(18px) scale(1, .9) rotate(45deg);
+    border-bottom-right-radius: 40px;
+  }
+
+  75% {
+    transform: translateY(9px) rotate(67.5deg);
+  }
+
+  100% {
+    transform: translateY(0) rotate(90deg);
+  }
+}
+
+@keyframes shadow324 {
+
+  0%,
+    100% {
+    transform: scale(1, 1);
+  }
+
+  50% {
+    transform: scale(1.2, 1);
+  }
 }
 </style>
